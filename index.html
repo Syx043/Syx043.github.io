@@ -8,39 +8,284 @@
         :root { --blue: #007aff; --red: #ff3b30; --bg: #ffffff; }
         body {
             margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center;
-            background-color: var(--bg); color: #1d1d1f; font-family: -apple-system, sans-serif;
-            overflow: hidden; touch-action: none; height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #1d1d1f; 
+            font-family: -apple-system, sans-serif; overflow-y: auto; min-height: 100vh;
+            justify-content: center;
         }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .warning-text { color: var(--red) !important; animation: pulse 0.5s infinite; }
+        
+        /* 游戏机主体 */
+        #gameboy-body {
+            width: 95vw; max-width: 450px; height: auto; min-height: 750px; 
+            margin: 20px auto; position: relative; display: flex; flex-direction: column;
+            background: linear-gradient(135deg, #2c2c2e 0%, #1d1d1f 100%); 
+            border-radius: 28px; box-shadow: 
+                0 25px 60px rgba(0,0,0,0.5),
+                0 10px 30px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.1),
+                inset 0 -1px 0 rgba(0,0,0,0.5);
+            border: 15px solid #1d1d1f; overflow: hidden;
+        }
+        
+        /* 游戏机顶部装饰 */
+        .console-top {
+            padding: 12px 25px 8px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);
+            height: 40px; box-sizing: border-box;
+        }
+        .console-logo {
+            font-size: 16px; font-weight: 900; color: #ff3b30; letter-spacing: 1.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+        }
+        .power-light {
+            width: 12px; height: 12px; border-radius: 50%; background: #30d158;
+            box-shadow: 0 0 12px #30d158, inset 0 0 6px rgba(255,255,255,0.7);
+            animation: powerPulse 2s infinite alternate;
+        }
+        @keyframes powerPulse {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        
+        /* 屏幕区域 - 占据2/3高度 */
+        #screen-section {
+            flex: 2; /* 2/3部分 */
+            padding: 15px 20px 20px; display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start;
+            box-sizing: border-box;
+        }
+        
+        /* 状态显示区域 */
+        #top-ui {
+            width: 100%; display: flex; flex-direction: column; align-items: center;
+            margin-bottom: 10px; z-index: 10; pointer-events: none;
+        }
+        .timer-row { 
+            display: flex; gap: 12px; margin-bottom: 6px; 
+            justify-content: center; width: 100%;
+        }
+        .timer-box {
+            background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(30,30,30,0.9) 100%); 
+            padding: 8px 14px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08); font-size: 11px; font-weight: 700;
+            color: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            min-width: 110px; text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        .timer-box span {
+            color: var(--blue); font-weight: 900; font-size: 13px;
+        }
+        #status-overlay { display: flex; gap: 8px; margin-top: 5px; }
+        .status-tag {
+            padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 900;
+            color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 4px;
+        }
+        
+        /* 分数显示 */
+        #score-board {
+            font-size: 60px; font-weight: 900; margin: 5px 0 15px; 
+            color: #fff; letter-spacing: -2px; text-shadow: 0 4px 8px rgba(0,0,0,0.7);
+            background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(40,40,40,0.5) 100%); 
+            padding: 10px 25px; border-radius: 18px;
+            border: 2px solid rgba(255,255,255,0.12);
+            min-width: 180px; text-align: center;
+        }
+        
+        /* 游戏画布容器 */
+        #game-container {
+            position: relative; border-radius: 12px; 
+            background: #000; overflow: hidden; border: 6px solid #000;
+            box-shadow: 
+                0 15px 40px rgba(0,0,0,0.7),
+                inset 0 0 25px rgba(255,255,255,0.05);
+            width: 100%; max-width: 380px; height: 0; padding-bottom: 100%; /* 保持正方形 */
+            margin: 0 auto;
+        }
+        canvas { 
+            position: absolute; top: 0; left: 0; 
+            width: 100%; height: 100%; display: block; 
+        }
+        
+        /* 扬声器装饰 */
+        .speaker-grill {
+            width: 70%; height: 6px; margin: 5px auto;
+            background: repeating-linear-gradient(
+                90deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7) 3px, 
+                rgba(255,255,255,0.08) 3px, rgba(255,255,255,0.08) 6px
+            ); border-radius: 3px;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.5);
+        }
+        
+        /* 控制区域 - 占据1/3高度 */
+        #control-section {
+            flex: 1; /* 1/3部分 */
+            padding: 15px 25px 25px; background: rgba(0,0,0,0.25); 
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            box-sizing: border-box; min-height: 220px;
+        }
+        
+        /* 十字键容器 */
+        .d-pad-container {
+            position: relative; width: 160px; height: 160px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        /* 十字键底座 */
+        .d-pad {
+            position: relative; width: 120px; height: 120px;
+            background: linear-gradient(135deg, #252527 0%, #1a1a1c 100%);
+            border-radius: 50%; border: 8px solid #000;
+            box-shadow: 
+                inset 0 -6px 12px rgba(0,0,0,0.8),
+                inset 0 4px 8px rgba(255,255,255,0.05),
+                0 8px 20px rgba(0,0,0,0.6);
+        }
+        
+        /* 十字键中心 */
+        .d-pad::before {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            width: 32px; height: 32px; background: #2c2c2e;
+            border-radius: 50%; transform: translate(-50%, -50%);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.7), 0 1px 1px rgba(255,255,255,0.05);
+            z-index: 1;
+        }
+        
+        /* 十字键按钮 */
+        .d-btn {
+            position: absolute; width: 48px; height: 48px; border-radius: 14px;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            border: 4px solid #000; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: rgba(255,255,255,0.9); cursor: pointer;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+            box-shadow: 
+                0 6px 12px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.08s ease; z-index: 2;
+        }
+        .d-btn:active { 
+            transform: translateY(3px) scale(0.95); 
+            box-shadow: 
+                0 2px 4px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, #2c2c2e 0%, #1d1d1f 100%);
+        }
+        #btn-up { top: 5px; left: 50%; transform: translateX(-50%); }
+        #btn-down { bottom: 5px; left: 50%; transform: translateX(-50%); }
+        #btn-left { left: 5px; top: 50%; transform: translateY(-50%); }
+        #btn-right { right: 5px; top: 50%; transform: translateY(-50%); }
+        
+        /* 加速按钮容器 */
+        .action-btn-container {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100%;
+        }
+        
+        /* 加速按钮 */
+        #boost-btn {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ff3b30 0%, #a00000 100%);
+            border: 8px solid #1d1d1f; color: white; font-weight: bold; font-size: 16px;
+            cursor: pointer; box-shadow: 
+                0 10px 25px rgba(255,59,48,0.4),
+                inset 0 4px 12px rgba(255,255,255,0.3),
+                inset 0 -6px 12px rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+            transition: all 0.1s ease; position: relative;
+        }
+        #boost-btn:active {
+            transform: translateY(4px) scale(0.94);
+            box-shadow: 
+                0 5px 15px rgba(255,59,48,0.3),
+                inset 0 4px 12px rgba(255,255,255,0.2),
+                inset 0 -4px 8px rgba(0,0,0,0.5);
+        }
+        #boost-btn::after {
+            content: ''; position: absolute; top: -12px; left: -12px;
+            right: -12px; bottom: -12px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.1); pointer-events: none;
+        }
+        
+        /* 按钮标签 */
+        .btn-label {
+            color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 700;
+            margin-top: 8px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        
+        /* 叠加层（开始/死亡屏幕） */
         .overlay {
-            position: fixed; inset: 0; background: rgba(255,255,255,0.98); z-index: 100;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 30px; text-align: center;
         }
         .guide-box {
-            background: #f2f2f7; padding: 18px; border-radius: 15px; max-width: 300px;
-            margin: 15px 0; font-size: 13px; line-height: 1.6; color: #444; text-align: left;
-            border: 1px solid #e5e5ea;
+            background: rgba(255,255,255,0.1); padding: 18px; border-radius: 15px; 
+            max-width: 320px; margin: 15px 0; font-size: 13px; line-height: 1.6; 
+            color: rgba(255,255,255,0.9); text-align: left; border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
         }
-        .action-btn { background: black; color: white; border: none; padding: 16px 45px; border-radius: 35px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        #top-ui { width: 100%; position: absolute; top: 10px; display: flex; flex-direction: column; align-items: center; z-index: 10; pointer-events: none; }
-        .timer-row { display: flex; gap: 10px; }
-        .timer-box { background: rgba(255,255,255,0.95); padding: 5px 12px; border-radius: 8px; border: 1px solid #eee; font-size: 11px; font-weight: bold; }
-        .status-tag { padding: 2px 10px; border-radius: 4px; font-size: 11px; font-weight: 900; color: white; margin-top: 5px; }
-        #score-board { font-size: 64px; font-weight: 900; margin-top: 80px; color: #000; letter-spacing: -3px; }
-        #game-container { position: relative; border-radius: 15px; box-shadow: 0 15px 50px rgba(0,0,0,0.12); background: #fff; overflow: hidden; }
-        canvas { display: block; width: 88vw; height: 88vw; max-width: 380px; max-height: 380px; }
-        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-around; align-items: center; pointer-events: auto; }
-        .d-pad { display: grid; grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 72px); }
-        .d-btn { width: 72px; height: 72px; background: #f2f2f7; border: 1px solid #e5e5ea; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        #boost-btn { width: 100px; height: 100px; background: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 6px solid white; color: white; font-weight: bold; box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        .action-btn { 
+            background: linear-gradient(135deg, #ff3b30 0%, #c00000 100%); 
+            color: white; border: none; padding: 16px 45px; border-radius: 35px; 
+            font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px;
+            box-shadow: 0 8px 20px rgba(255,59,48,0.3);
+            transition: transform 0.2s ease;
+        }
+        .action-btn:active { transform: translateY(3px); }
+        
+        /* 动画 */
+        @keyframes pulse { 
+            0% { transform: scale(1); } 
+            50% { transform: scale(1.05); } 
+            100% { transform: scale(1); } 
+        }
+        @keyframes glow { 
+            0% { box-shadow: 0 0 10px var(--blue); } 
+            50% { box-shadow: 0 0 20px var(--blue); } 
+            100% { box-shadow: 0 0 10px var(--blue); } 
+        }
+        .warning-text { color: var(--red) !important; animation: pulse 0.5s infinite; }
+        
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            #gameboy-body { 
+                max-width: 400px; min-height: 700px; 
+                border-width: 12px;
+            }
+            #screen-section { padding: 12px 15px 15px; }
+            #control-section { 
+                padding: 12px 20px 20px; 
+                min-height: 200px;
+            }
+            .d-pad-container { width: 150px; height: 150px; }
+            .d-pad { width: 110px; height: 110px; }
+            .d-btn { width: 44px; height: 44px; font-size: 18px; }
+            #boost-btn { width: 90px; height: 90px; font-size: 15px; }
+            #score-board { font-size: 54px; min-width: 160px; padding: 8px 20px; }
+            .timer-box { min-width: 100px; font-size: 10px; padding: 7px 12px; }
+        }
+        
+        @media (max-height: 700px) {
+            #gameboy-body { 
+                min-height: 680px; 
+                margin: 10px auto;
+            }
+            #control-section { 
+                min-height: 180px;
+            }
+            .d-pad-container { width: 140px; height: 140px; }
+            .d-pad { width: 100px; height: 100px; }
+            .d-btn { width: 40px; height: 40px; font-size: 16px; }
+            #boost-btn { width: 85px; height: 85px; }
+            #score-board { font-size: 50px; margin: 3px 0 10px; }
+        }
     </style>
 </head>
 <body>
 
     <div id="start-screen" class="overlay">
-        <h1 style="font-size: 32px; margin:0;">珍珠蛇</h1>
+        <h1 style="font-size: 32px; margin:0; color:#fff;">珍珠蛇</h1>
         <p style="color: var(--red); font-weight: 900; margin-top:5px;">STRANGER SYSTEMS</p>
         <div class="guide-box">
             <div style="margin-bottom:8px;">🟡 <b>食物 (x4)</b> | ⚪ <b>正面球 (x4)</b></div>
@@ -50,36 +295,66 @@
     </div>
 
     <div id="death-screen" class="overlay" style="display: none;">
-        <h2 style="font-size: 40px; margin:0;">同步丢失</h2>
+        <h2 style="font-size: 40px; margin:0; color:#fff;">同步丢失</h2>
         <p id="death-quote" style="margin:20px 0; color:var(--red);">数据重连中...</p>
         <button id="restart-btn" class="action-btn">重新同步</button>
     </div>
 
-    <div id="top-ui">
-        <div class="timer-row">
-            <div id="box-obs" class="timer-box">地形重组: <span id="t-obs">10.0</span>s</div>
-            <div id="box-portal" class="timer-box">传送变相: <span id="t-portal">20.0</span>s</div>
+    <!-- 游戏机主体 -->
+    <div id="gameboy-body">
+        <!-- 顶部装饰 -->
+        <div class="console-top">
+            <div class="console-logo">PEARL SNAKE</div>
+            <div class="power-light"></div>
         </div>
-        <div id="status-overlay" style="display: flex; gap:5px;">
-            <div id="tag-shield" class="status-tag" style="background: var(--blue); display:none;">🛡️ 护盾</div>
-            <div id="tag-confused" class="status-tag" style="background: var(--red); display:none;">⚠️ 逆转</div>
+        
+        <!-- 屏幕区域 (2/3) -->
+        <div id="screen-section">
+            <!-- 状态UI -->
+            <div id="top-ui">
+                <div class="timer-row">
+                    <div id="box-obs" class="timer-box">地形重组: <span id="t-obs">10.0</span>s</div>
+                    <div id="box-portal" class="timer-box">传送变相: <span id="t-portal">20.0</span>s</div>
+                </div>
+                <div id="status-overlay" style="display: flex; gap:5px;">
+                    <div id="tag-shield" class="status-tag" style="background: var(--blue); display:none;">🛡️ 护盾</div>
+                    <div id="tag-confused" class="status-tag" style="background: var(--red); display:none;">⚠️ 逆转</div>
+                </div>
+            </div>
+            
+            <!-- 分数显示 -->
+            <div id="score-board">0</div>
+            
+            <!-- 游戏画布 -->
+            <div id="game-container">
+                <canvas id="gameCanvas" width="2048" height="2048"></canvas>
+            </div>
+            
+            <!-- 扬声器装饰 -->
+            <div class="speaker-grill"></div>
         </div>
-    </div>
-
-    <div id="score-board">0</div>
-    <div id="game-container"><canvas id="gameCanvas" width="2048" height="2048"></canvas></div>
-
-    <div id="controls">
-        <div class="d-pad">
-            <div id="btn-up" class="d-btn" style="grid-area: 1/2;">▲</div>
-            <div id="btn-left" class="d-btn" style="grid-area: 2/1;">◀</div>
-            <div id="btn-right" class="d-btn" style="grid-area: 2/3;">▶</div>
-            <div id="btn-down" class="d-btn" style="grid-area: 3/2;">▼</div>
+        
+        <!-- 控制区域 (1/3) -->
+        <div id="control-section">
+            <!-- 十字键 -->
+            <div class="d-pad-container">
+                <div class="d-pad"></div>
+                <div id="btn-up" class="d-btn">▲</div>
+                <div id="btn-left" class="d-btn">◀</div>
+                <div id="btn-right" class="d-btn">▶</div>
+                <div id="btn-down" class="d-btn">▼</div>
+            </div>
+            
+            <!-- 加速按钮 -->
+            <div class="action-btn-container">
+                <button id="boost-btn">加速</button>
+                <div class="btn-label">Boost</div>
+            </div>
         </div>
-        <button id="boost-btn">加速</button>
     </div>
 
 <script>
+    // 注意：JavaScript代码完全保持不变，仅CSS和HTML结构调整
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d', { alpha: false });
     const tileCount = 32, res = 2048, size = res / tileCount;
